@@ -1,0 +1,114 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://github.com/QuickStatusHQ/quickstatus-agent/schema/payload.v1.json",
+  "title": "QuickStatus.dev server agent report, version 1",
+  "description": "Sent gzip-compressed to POST /agent/report. Changes within v1 are additive: receivers ignore unknown fields, and no field added later is ever required.",
+  "type": "object",
+  "required": ["v"],
+  "properties": {
+    "v": {"const": 1},
+    "agent": {
+      "type": "object",
+      "properties": {"version": {"type": "string", "maxLength": 64}}
+    },
+    "host": {
+      "type": "object",
+      "properties": {
+        "hostname": {"type": "string", "maxLength": 256},
+        "os": {"type": "string", "maxLength": 256},
+        "kernel": {"type": "string", "maxLength": 256},
+        "arch": {"type": "string", "maxLength": 64},
+        "uptime_s": {"$ref": "#/$defs/nonneg"}
+      }
+    },
+    "cpu": {
+      "type": "object",
+      "description": "pct, iowait_pct and steal_pct cover the time since the previous report; null on the first run.",
+      "properties": {
+        "pct": {"$ref": "#/$defs/pct"},
+        "iowait_pct": {"$ref": "#/$defs/pct"},
+        "steal_pct": {"$ref": "#/$defs/pct"},
+        "load1": {"$ref": "#/$defs/nonneg"},
+        "load5": {"$ref": "#/$defs/nonneg"},
+        "load15": {"$ref": "#/$defs/nonneg"},
+        "cores": {"type": ["integer", "null"], "minimum": 0}
+      }
+    },
+    "mem": {
+      "type": "object",
+      "properties": {
+        "pct": {"$ref": "#/$defs/pct"},
+        "total_bytes": {"type": ["integer", "null"], "minimum": 0},
+        "available_bytes": {"type": ["integer", "null"], "minimum": 0},
+        "swap_pct": {"$ref": "#/$defs/pct"}
+      }
+    },
+    "disks": {
+      "type": "array",
+      "maxItems": 64,
+      "items": {
+        "type": "object",
+        "required": ["mount"],
+        "properties": {
+          "mount": {"type": "string", "maxLength": 256},
+          "fs": {"type": ["string", "null"], "maxLength": 64},
+          "pct": {"$ref": "#/$defs/pct"},
+          "inodes_pct": {"$ref": "#/$defs/pct"}
+        }
+      }
+    },
+    "disk_io": {
+      "type": "array",
+      "maxItems": 64,
+      "items": {
+        "type": "object",
+        "required": ["device"],
+        "properties": {
+          "device": {"type": "string", "maxLength": 256},
+          "read_bps": {"$ref": "#/$defs/nonneg"},
+          "write_bps": {"$ref": "#/$defs/nonneg"}
+        }
+      }
+    },
+    "net": {
+      "type": "array",
+      "maxItems": 64,
+      "items": {
+        "type": "object",
+        "required": ["iface"],
+        "properties": {
+          "iface": {"type": "string", "maxLength": 256},
+          "rx_bps": {"$ref": "#/$defs/nonneg"},
+          "tx_bps": {"$ref": "#/$defs/nonneg"}
+        }
+      }
+    },
+    "procs": {
+      "type": "object",
+      "properties": {
+        "count": {"type": ["integer", "null"], "minimum": 0},
+        "watched": {
+          "type": "array",
+          "maxItems": 64,
+          "items": {
+            "type": "object",
+            "required": ["name"],
+            "properties": {
+              "name": {"type": "string", "maxLength": 256},
+              "running": {"type": "boolean"},
+              "count": {"type": "integer", "minimum": 0}
+            }
+          }
+        }
+      }
+    },
+    "interval_s": {
+      "description": "Seconds since the previous report: the window the rates and CPU numbers cover.",
+      "$ref": "#/$defs/nonneg"
+    }
+  },
+  "$defs": {
+    "pct": {"type": ["number", "null"], "minimum": 0, "maximum": 100},
+    "nonneg": {"type": ["number", "null"], "minimum": 0}
+  }
+}

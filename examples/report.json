@@ -1,0 +1,77 @@
+{
+  "v": 1,
+  "agent": {
+    "version": "0.1.0"
+  },
+  "host": {
+    "hostname": "web-1",
+    "os": "Alpine Linux v3.20",
+    "kernel": "6.10.14-linuxkit",
+    "arch": "aarch64",
+    "uptime_s": 1727
+  },
+  "cpu": {
+    "pct": 0.5,
+    "iowait_pct": 0.0,
+    "steal_pct": 0.0,
+    "load1": 1.46,
+    "load5": 1.09,
+    "load15": 0.76,
+    "cores": 11
+  },
+  "mem": {
+    "pct": 4.6,
+    "total_bytes": 13584211968,
+    "available_bytes": 12960194560,
+    "swap_pct": 0.0
+  },
+  "disks": [
+    {
+      "mount": "/",
+      "fs": "overlay",
+      "pct": 20,
+      "inodes_pct": 8
+    },
+    {
+      "mount": "/var/lib/quickstatus",
+      "fs": "ext4",
+      "pct": 20,
+      "inodes_pct": 8
+    }
+  ],
+  "disk_io": [
+    {
+      "device": "vda",
+      "read_bps": 0,
+      "write_bps": 164864
+    },
+    {
+      "device": "vdb",
+      "read_bps": 0,
+      "write_bps": 0
+    }
+  ],
+  "net": [
+    {
+      "iface": "eth0",
+      "rx_bps": 159,
+      "tx_bps": 0
+    }
+  ],
+  "procs": {
+    "count": 5,
+    "watched": [
+      {
+        "name": "nginx",
+        "running": true,
+        "count": 5
+      },
+      {
+        "name": "postgres",
+        "running": false,
+        "count": 0
+      }
+    ]
+  },
+  "interval_s": 3
+}

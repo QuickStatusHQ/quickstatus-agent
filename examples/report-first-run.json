@@ -1,0 +1,49 @@
+{
+  "v": 1,
+  "agent": {
+    "version": "0.1.0"
+  },
+  "host": {
+    "hostname": "web-1",
+    "os": "Alpine Linux v3.20",
+    "kernel": "6.10.14-linuxkit",
+    "arch": "aarch64",
+    "uptime_s": 1736
+  },
+  "cpu": {
+    "pct": null,
+    "iowait_pct": null,
+    "steal_pct": null,
+    "load1": 1.39,
+    "load5": 1.09,
+    "load15": 0.76,
+    "cores": 11
+  },
+  "mem": {
+    "pct": 4.6,
+    "total_bytes": 13584211968,
+    "available_bytes": 12956999680,
+    "swap_pct": 0.0
+  },
+  "disks": [
+    {
+      "mount": "/",
+      "fs": "overlay",
+      "pct": 20,
+      "inodes_pct": 8
+    },
+    {
+      "mount": "/var/lib/quickstatus",
+      "fs": "ext4",
+      "pct": 20,
+      "inodes_pct": 8
+    }
+  ],
+  "disk_io": [],
+  "net": [],
+  "procs": {
+    "count": 5,
+    "watched": []
+  },
+  "interval_s": null
+}

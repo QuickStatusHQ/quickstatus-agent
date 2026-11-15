@@ -1,0 +1,83 @@
+# One agent per node. Create the token secret first (from a file, so the token stays out of
+# shell history):
+#   kubectl -n quickstatus create secret generic quickstatus-agent --from-file=token=./qs-token
+#
+# The host's / is mounted read-only so the agent can measure each node filesystem. The pod runs
+# as uid 10001 with every capability dropped, so it reads only what an unprivileged node user
+# could: not root-only files (kubelet keys, /etc/kubernetes/admin.conf) and not the container
+# runtime socket.
+#
+# hostPath is forbidden by the Baseline and Restricted Pod Security Standards: in a namespace
+# that enforces either, the DaemonSet is accepted but its pods are rejected. The commented label
+# below relaxes Pod Security Admission for this namespace only.
+#
+# GKE Autopilot is different: its own admission policy rejects these hostPath mounts, and the
+# label doesn't change that. On Autopilot (or wherever hostPath is blocked some other way), use
+# install.sh on each node instead; it needs no mounts.
+apiVersion: v1
+kind: Namespace
+metadata:
+  name: quickstatus
+  # labels:
+  #   pod-security.kubernetes.io/enforce: privileged
+---
+apiVersion: apps/v1
+kind: DaemonSet
+metadata:
+  name: quickstatus-agent
+  namespace: quickstatus
+spec:
+  selector:
+    matchLabels: {app: quickstatus-agent}
+  template:
+    metadata:
+      labels: {app: quickstatus-agent}
+    spec:
+      # Sends "leave" when the node is drained or removed.
+      terminationGracePeriodSeconds: 15
+      automountServiceAccountToken: false
+      enableServiceLinks: false
+      securityContext:
+        runAsNonRoot: true
+        runAsUser: 10001
+        runAsGroup: 10001
+        fsGroup: 10001
+        seccompProfile: {type: RuntimeDefault}
+      # Worker nodes only. To watch control-plane nodes too, uncomment:
+      # tolerations:
+      #   - {key: node-role.kubernetes.io/control-plane, operator: Exists, effect: NoSchedule}
+      containers:
+        - name: agent
+          image: ghcr.io/quickstatushq/quickstatus-agent:0.1.0
+          env:
+            - name: QUICKSTATUS_TOKEN_FILE
+              value: /var/run/quickstatus/token
+            - name: NODE_NAME
+              valueFrom: {fieldRef: {fieldPath: spec.nodeName}}
+            - name: QUICKSTATUS_LABELS
+              value: "cluster=prod"
+          resources:
+            requests: {cpu: 5m, memory: 16Mi}
+            limits: {cpu: 100m, memory: 64Mi}
+          securityContext:
+            allowPrivilegeEscalation: false
+            readOnlyRootFilesystem: true
+            capabilities: {drop: [ALL]}
+          volumeMounts:
+            - {name: host, mountPath: /host, readOnly: true}
+            - {name: proc, mountPath: /host/proc, readOnly: true}
+            - {name: state, mountPath: /var/lib/quickstatus}
+            - {name: token, mountPath: /var/run/quickstatus, readOnly: true}
+      volumes:
+        - name: host
+          hostPath: {path: /, type: Directory}
+        - name: proc
+          hostPath: {path: /proc, type: Directory}
+        # Per-pod state, used only by this container. A restarted pod enrolls again as the same
+        # member (members are keyed by node name).
+        - name: state
+          emptyDir: {medium: Memory, sizeLimit: 1Mi}
+        # 0440 is enough: the kubelet sets the file's group to fsGroup (10001) above. Keep fsGroup
+        # if you edit this, or the agent can't read the token.
+        - name: token
+          secret: {secretName: quickstatus-agent, defaultMode: 0440, items: [{key: token, path: token}]}

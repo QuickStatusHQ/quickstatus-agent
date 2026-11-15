@@ -1,0 +1,43 @@
+[Unit]
+Description=Tell QuickStatus.dev this server is shutting down on purpose
+Documentation=https://github.com/QuickStatusHQ/quickstatus-agent
+# Stopped before the network goes down, so the leave call can still be sent.
+After=network-online.target
+Wants=network-online.target
+
+[Service]
+Type=oneshot
+RemainAfterExit=yes
+User=quickstatus
+Group=quickstatus
+ExecStart=/bin/true
+ExecStop=/usr/local/bin/quickstatus-agent leave
+TimeoutStopSec=10
+# Sandbox. The agent reads /proc, /sys, /etc/os-release, /etc/machine-id and its config, writes
+# only /var/lib/quickstatus, and talks HTTPS (plus the cloud metadata endpoint for the instance id).
+NoNewPrivileges=yes
+CapabilityBoundingSet=
+AmbientCapabilities=
+ProtectSystem=strict
+# read-only, not yes: a separate /home partition must stay visible for its disk usage.
+ProtectHome=read-only
+PrivateTmp=yes
+PrivateDevices=yes
+ProtectKernelTunables=yes
+ProtectKernelModules=yes
+ProtectKernelLogs=yes
+ProtectControlGroups=yes
+ProtectHostname=yes
+ProtectClock=yes
+RestrictSUIDSGID=yes
+RestrictNamespaces=yes
+RestrictRealtime=yes
+LockPersonality=yes
+MemoryDenyWriteExecute=yes
+SystemCallArchitectures=native
+RestrictAddressFamilies=AF_UNIX AF_INET AF_INET6 AF_NETLINK
+UMask=0077
+ReadWritePaths=/var/lib/quickstatus
+
+[Install]
+WantedBy=multi-user.target

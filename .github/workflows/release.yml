@@ -1,0 +1,38 @@
+# Tag vX.Y.Z -> GitHub release with the files install.sh downloads, SHA256SUMS, and the image.
+# Third-party actions are pinned to commit SHAs (the comment names the tag).
+name: release
+on:
+  push: {tags: ['v*.*.*']}
+permissions:
+  contents: write
+  packages: write
+jobs:
+  release:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@11d5960a326750d5838078e36cf38b85af677262 # v4.4.0
+      - name: Version matches the tag
+        run: |
+          v="$(sed -n 's/^AGENT_VERSION="\(.*\)"/\1/p' quickstatus-agent.sh)"
+          [ "v$v" = "$GITHUB_REF_NAME" ] || { echo "AGENT_VERSION $v != tag $GITHUB_REF_NAME"; exit 1; }
+      - name: Assets
+        run: |
+          mkdir dist
+          cp quickstatus-agent.sh install.sh uninstall.sh systemd/* dist/
+          (cd dist && sha256sum * > SHA256SUMS)
+      - name: GitHub release
+        env: {GH_TOKEN: '${{ github.token }}'}
+        run: gh release create "$GITHUB_REF_NAME" dist/* --title "$GITHUB_REF_NAME" --notes-from-tag --verify-tag
+      - id: ver
+        run: echo "v=${GITHUB_REF_NAME#v}" >> "$GITHUB_OUTPUT"
+      - uses: docker/setup-qemu-action@c7c53464625b32c7a7e944ae62b3e17d2b600130 # v3.7.0
+      - uses: docker/setup-buildx-action@8d2750c68a42422c14e847fe6c8ac0403b4cbd6f # v3.12.0
+      - uses: docker/login-action@c94ce9fb468520275223c153574b00df6fe4bcc9 # v3.7.0
+        with: {registry: ghcr.io, username: '${{ github.actor }}', password: '${{ github.token }}'}
+      - uses: docker/build-push-action@10e90e3645eae34f1e60eeb005ba3a3d33f178e8 # v6.19.2
+        with:
+          push: true
+          platforms: linux/amd64,linux/arm64
+          # Version tags only, no :latest: installs pin a release. Images and SHA256SUMS aren't
+          # signed.
+          tags: ghcr.io/quickstatushq/quickstatus-agent:${{ steps.ver.outputs.v }}

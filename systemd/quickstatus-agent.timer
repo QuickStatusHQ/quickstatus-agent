@@ -1,0 +1,11 @@
+[Unit]
+Description=Run the QuickStatus.dev server agent every minute
+Documentation=https://github.com/QuickStatusHQ/quickstatus-agent
+
+[Timer]
+OnCalendar=*-*-* *:*:00
+AccuracySec=1s
+Persistent=false
+
+[Install]
+WantedBy=timers.target
