@@ -22,3 +22,6 @@
     installs and uninstalls, machine images, and process-name matching.
   - Releases publish version-tagged images only (no `:latest`); workflow actions are pinned to
     commit SHAs.
+  - The installer adds util-linux when the system has neither `runuser` nor `su`, and fails
+    (exit 3) instead of reporting success when it cannot run the agent user. `quickstatus-agent
+    version` works without `/proc`, so `docker run <image> version` needs no mounts.

@@ -4,7 +4,7 @@
 set -euo pipefail
 cd "$(dirname "$0")/.."
 IMAGES=("$@")
-[ ${#IMAGES[@]} -gt 0 ] || IMAGES=(ubuntu:24.04 debian:12 alpine:3.20 rockylinux:9-minimal)
+[ ${#IMAGES[@]} -gt 0 ] || IMAGES=(ubuntu:24.04 ubuntu:20.04 debian:12 alpine:3.20 rockylinux:9-minimal amazonlinux:2023)
 PY="${PYTHON:-python3}"
 PORT="${STUB_PORT:-18080}"
 WORK="$(mktemp -d)"

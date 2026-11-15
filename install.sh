@@ -135,6 +135,8 @@ for tool in bash curl gzip awk sed df find; do
   command -v "$tool" >/dev/null 2>&1 || missing="$missing $tool"
 done
 if ! command -v useradd >/dev/null && ! command -v adduser >/dev/null; then missing="$missing useradd"; fi
+# The first report runs as the agent user (bare amazonlinux:2023 has neither).
+if ! command -v runuser >/dev/null && ! command -v su >/dev/null; then missing="$missing runuser"; fi
 if [ -n "$missing" ]; then
   say "installing:$missing"
   # Only what's missing (Rocky ships curl-minimal, which conflicts with the curl package).
@@ -148,6 +150,7 @@ if [ -n "$missing" ]; then
         if command -v apt-get >/dev/null; then packages="$packages passwd"
         elif command -v zypper >/dev/null || command -v apk >/dev/null; then packages="$packages shadow"
         else packages="$packages shadow-utils"; fi ;;
+      runuser) packages="$packages util-linux" ;;
       *) packages="$packages $tool" ;;
     esac
   done
@@ -302,6 +305,7 @@ case "$code" in
   0) say "reporting. This server shows up in the console within a minute." ;;
   4) die 4 "the enrollment token was rejected; copy the install command again from the console" ;;
   7) die 7 "this check has reached its server limit for your plan" ;;
+  126|127) die 3 "couldn't run the agent as $USER_NAME (exit $code)" ;;
   *) if [ "$WAIT" = 1 ]; then die 5 "the first report wasn't accepted (exit $code)"; fi
      say "the first report didn't go through (exit $code); the agent keeps retrying every minute" ;;
 esac

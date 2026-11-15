@@ -471,6 +471,8 @@ cmd_status() {
 }
 
 main() {
+  # Answers without /proc or state, so `docker run <image> version` works with no mounts.
+  case "${1:-}" in version|--version|-v) printf '%s\n' "$AGENT_VERSION"; return 0 ;; esac
   if [ ! -r "$PROC/stat" ]; then log "this agent needs Linux /proc (HOST_ROOT=$HOST_ROOT)"; exit 3; fi
   mkdir -p "$STATE_DIR" 2>/dev/null
   if [ ! -w "$STATE_DIR" ]; then log "state directory $STATE_DIR is not writable"; exit 2; fi
@@ -482,7 +484,6 @@ main() {
     leave) cmd_leave ;;
     status) cmd_status ;;
     print) build_report ;;
-    version|--version|-v) printf '%s\n' "$AGENT_VERSION" ;;
     *) printf 'usage: quickstatus-agent [run [--now]|loop|enroll|leave|status|print|version]\n' >&2; exit 2 ;;
   esac
 }

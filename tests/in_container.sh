@@ -7,7 +7,10 @@ STUB="${STUB:?}"
 # Bare images lack curl (and bash on Alpine); the installer needs them to be fetched first.
 if command -v apk >/dev/null; then apk add --no-cache -q bash curl >/dev/null
 elif command -v apt-get >/dev/null; then apt-get update -qq >/dev/null && DEBIAN_FRONTEND=noninteractive apt-get install -y -qq curl procps >/dev/null
-elif command -v dnf >/dev/null; then command -v curl >/dev/null || dnf install -y -q curl >/dev/null
+elif command -v dnf >/dev/null; then
+  command -v curl >/dev/null || dnf install -y -q curl >/dev/null
+  # The account tests below call useradd themselves; bare amazonlinux:2023 has none.
+  command -v useradd >/dev/null || dnf install -y -q shadow-utils >/dev/null
 fi
 command -v useradd >/dev/null || command -v adduser >/dev/null
 
